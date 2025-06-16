@@ -67,6 +67,29 @@ const login = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+
+        // Удаляем сессию из базы данных
+        db.run('DELETE FROM sessions WHERE token = ?', [token], (err) => {
+            if (err) {
+                console.error('Error during logout:', err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+
+            res.json({ message: 'Logout successful' });
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 // Функция для создания первого пользователя (админа)
 const createInitialAdmin = async () => {
     const adminPassword = await bcrypt.hash('admin123', 10);
@@ -88,5 +111,6 @@ const createInitialAdmin = async () => {
 createInitialAdmin();
 
 module.exports = {
-    login
+    login,
+    logout
 }; 
